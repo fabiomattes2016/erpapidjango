@@ -15,4 +15,4 @@ class Signup(Base):
         
         return Response({
             "user": serializer.data
-        })
+        }, status=201)
