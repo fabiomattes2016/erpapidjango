@@ -38,5 +38,23 @@ def check_permissions(user, method, permission_to):
 class EmployeesPermisison(permissions.BasePermission):
     message = "O funcionário não tem permissão para gerenciar outros funcionários"
     
-    def has_permission(self, request, view):
+    def has_permission(self, request, _view):
         return check_permissions(request.user, request.method, permission_to='employee')
+
+class GroupsPermission(permissions.BasePermission):
+    message = "O funcionário não tem permissão para gerenciar grupos"
+
+    def has_permission(self, request, _view):
+        return check_permissions(request.user, request.method, permission_to='group')
+    
+class GroupsPermissionPermission(permissions.BasePermission):
+    message = "O funcionário não tem permissão para gerenciar as permissões"
+
+    def has_permission(self, request, _view):
+        return check_permissions(request.user, request.method, permission_to='permission')
+
+class TaskPermission(permissions.BasePermission):
+    message = "O funcionário não tem permissão para gerenciar as tarefas de todos os funcionários"
+
+    def has_permission(self, request, _view):
+        return check_permissions(request.user, request.method, permission_to='task')
