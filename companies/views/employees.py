@@ -16,7 +16,7 @@ class Employees(Base):
 
     def get(self, request):
         enterprise_id = self.get_enterprise_id(request.user.id)
-        owner_id = Enterprise.objects.values('user_id').filter(id=enterprise_id).first()['user_id']
+        owner_id = Enterprise.objects.values('owner_id').filter(id=enterprise_id).first()['owner_id']
         employees = Employee.objects.filter(enterprise_id=enterprise_id).exclude(user_id=owner_id).all()
         serializer = EmployeesSerializer(employees, many=True)
 
