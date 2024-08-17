@@ -1,6 +1,6 @@
 from companies.views.base import Base
 from companies.utils.exceptions import RequiredFields
-from companies.utils.permissions import GroupsPermissions
+from companies.utils.permissions import GroupsPermission
 from companies.serializers import GroupsSerializer
 from accounts.models import Group, GroupPermissions
 from rest_framework.views import Response
@@ -9,7 +9,7 @@ from django.contrib.auth.models import Permission
 
 
 class Groups(Base):
-    permission_classes = [GroupsPermissions]
+    permission_classes = [GroupsPermission]
 
     def get(self, request):
         enterprise_id = self.get_enterprise_id(request.user.id)
@@ -31,31 +31,30 @@ class Groups(Base):
             enterprise_id=enterprise_id
         )
 
-        if permissions:
-            permissions = permissions.split(",") # 1,2 3,4 -> [1,2,3,4]
+        try:
+            if permissions:
+                permissions = permissions.split(",") # 1,2 3,4 -> [1,2,3,4]
 
-            for item in permissions:
-                if type(item) != int:
-                    created_group.delete()
-                    raise APIException("Tipo de permissão inválida", code="invalid_type_permission")
+                for item in permissions:
+                    permission = Permission.objects.filter(id=item).exists()
 
-                permission = Permission.objects.filter(id=item).exists()
-
-                if not permission:
-                    created_group.delete()
-                    raise APIException("Permissão não existe", code="permission_not_exists")
-                
-                if not GroupPermissions.objects.filter(group_id=created_group.id, permission_id=item).exists():
-                    GroupPermissions.objects.create(
-                        group_id=created_group.id,
-                        permission_id=item
-                    )
+                    if not permission:
+                        created_group.delete()
+                        raise APIException("Permissão não existe", code="permission_not_exists")
+                    
+                    if not GroupPermissions.objects.filter(group_id=created_group.id, permission_id=item).exists():
+                        GroupPermissions.objects.create(
+                            group_id=created_group.id,
+                            permission_id=item
+                        )
+        except ValueError:
+            raise APIException("Tipo de permissão inválida", code="invalid_type_permission")
 
         return Response({"success": True}, status=201)
     
     
 class GroupDetail(Base):
-    permission_classes = [GroupsPermissions]
+    permission_classes = [GroupsPermission]
 
     def get(self, request, group_id):
         enterprise_id = self.get_enterprise_id(request.user.id)
@@ -77,24 +76,27 @@ class GroupDetail(Base):
             Group.objects.filter(id=group_id).update(name=name)
 
         GroupPermissions.objects.filter(group_id=group_id).delete()
-                
-        if permissions:
-            permissions = permissions.split(",") # 1,2 3,4 -> [1,2,3,4]
+        
+        try:
+            if permissions:
+                permissions = permissions.split(",") # 1,2 3,4 -> [1,2,3,4]
+                print(permissions)
 
-            for item in permissions:
-                if type(item) != int:
-                    raise APIException("Tipo de permissão inválida", code="invalid_type_permission")
+                for item in permissions:
+                    permission = Permission.objects.filter(id=item).exists()
 
-                permission = Permission.objects.filter(id=item).exists()
-
-                if not permission:
-                    raise APIException("Permissão não existe", code="permission_not_exists")
-                
-                if not GroupPermissions.objects.filter(group_id=group_id, permission_id=item).exists():
-                    GroupPermissions.objects.create(
-                        group_id=group_id,
-                        permission_id=item
-                    )
+                    if not permission:
+                        raise APIException("Permissão não existe", code="permission_not_exists")
+                    
+                    if not GroupPermissions.objects.filter(group_id=group_id, permission_id=item).exists():
+                        GroupPermissions.objects.create(
+                            group_id=group_id,
+                            permission_id=item
+                        )
+        except ValueError:
+            raise APIException("Tipo de permissão inválida", code="invalid_type_permission")
+        
+        return Response({"success": True})
         
         
     
