@@ -4,14 +4,14 @@ from companies.utils.permissions import TaskPermission
 from companies.serializers import TaskSerializer, TasksSerializer
 from companies.models import Task
 from rest_framework.response import Response
-from rest_framework.exceptions import APIException
+from rest_framework.exceptions import APIException, ValidationError
 
 
 class Tasks(Base):
     permission_classes = [TaskPermission]
 
     def get(self, request):
-        enterprise_id = self.get_enterprise_id(request.user_id)
+        enterprise_id = self.get_enterprise_id(request.user.id)
 
         tasks = Task.objects.filter(enterprise_id=enterprise_id).all()
         serializer = TasksSerializer(tasks, many=True)
@@ -34,7 +34,7 @@ class Tasks(Base):
         if due_date:
             try:
                 due_date = datetime.datetime.strptime(due_date, "%d/%m/%Y %H:%M")
-            except ValueError:
+            except ValidationError:
                 raise APIException("Data deve ter o padrão dd/mm/yyyy hh:mm", code="invalid_date")
             
         task = Task.objects.create(
@@ -79,7 +79,7 @@ class TaskDetail(Base):
         if due_date:
             try:
                 due_date = datetime.datetime.strptime(due_date, "%d/%m/%Y %H:%M")
-            except ValueError:
+            except ValidationError:
                 raise APIException("Data deve ter o padrão dd/mm/yyyy hh:mm", code="invalid_date")
             
         data = {
