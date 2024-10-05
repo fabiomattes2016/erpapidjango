@@ -9,7 +9,7 @@ class PermissionDetail(Base):
     permission_classes = [GroupsPermission]
 
     def get(self, request):
-        permissions = Permission.objects.filter(content_type_id__in=[2, 8, 11, 13]).all()
+        permissions = Permission.objects.filter(content_type_id__in=[2, 3, 11, 13]).all()
         serializer = PermissionsSerializer(permissions, many=True)
 
         return Response({"permissions": serializer.data})
